@@ -63,7 +63,7 @@ services:
       - kafka
       - zookeeper
     ports:
-      -"8080:8080"
+      - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -76,14 +76,14 @@ services:
     depends_on:
       - clickhouse
     ports:
-      -"5521:5521"
+      - "5521:5521"
     environment:
       VITE_CLICKHOUSE_URL: "http://clickhouse:8123"
       VITE_CLICKHOUSE_USER: "default"
       VITE_CLICKHOUSE_PASS: ""
       VITE_CLICKHOUSE_USE_ADVANSED: "false"
     networks:
-      -project_net
+      - project_net
 
 networks:
   project_net:
