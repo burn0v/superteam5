@@ -39,16 +39,14 @@ def attempt_date():
 def user_dict_generation():
     global user_id
     dic_json = {
-        "user_id": f"{user_id}",
+        "user_id": user_id,
         "email": f"{fake.email()}",
         "first_name": f"{fake.first_name()}",
         "last_name": f"{fake.last_name()}",
         "middle_name": f"{fake.middle_name()}",
         "phone_number": f"{fake.phone_number()}",
         "educational_institution": f"{random.choice(institution_array)}",
-        "faculty": "",
-        "group": "",
-        "course": f"{random.randint(1, 4)}",
+        "course": random.randint(1, 4),
         "created_at": f"{created_at()}",
     }
 
@@ -78,11 +76,11 @@ university_subjects = [
 def ticket_dict_generation():
     global ticket_id
     dic_json = {
-        "ticket_id": f"{ticket_id}",
+        "ticket_id": ticket_id,
         "subject": f"{random.choice(university_subjects)}",
         "max_points": 50,
         "question_count": random.randint(4, 5),
-        "diffuclty": f"{random.randint(1, 10)}",
+        "diffuclty": random.randint(1, 10),
     }
     ticket_id += 1
     return dic_json
@@ -125,7 +123,7 @@ def get_bootstrap_servers():
 
 async def send_messages_to_kafka(messages):
     bootstrap_servers = get_bootstrap_servers()
-    topic = os.getenv("KAFKA_TOPIC", "my_topic")
+    topic = os.getenv("KAFKA_TOPIC", "json_user_rachive")
 
     producer = AIOKafkaProducer(
         bootstrap_servers=bootstrap_servers,
