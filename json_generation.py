@@ -3,6 +3,7 @@ import json
 import os
 import random
 import sys
+import datetime
 
 from aiokafka import AIOKafkaProducer
 from faker import Faker
@@ -26,27 +27,42 @@ def created_at():
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
-def attempt_date():
+def attempt_date(start_year=2012):
+    
+    year = random.randint(start_year, datetime.datetime.now().year)
+    month = random.randint(1, 12)
+    
+    # Определяем максимальное количество дней в месяце
+    if month == 2:
+        # Проверка на високосный год
+        if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
+            max_day = 29
+        else:
+            max_day = 28
+    elif month in [4, 6, 9, 11]:
+        max_day = 30
+    else:
+        max_day = 31
+    
+    day = random.randint(1, max_day)
     hours = random.randint(0, 23)
     minutes = random.randint(0, 59)
     seconds = random.randint(0, 59)
-    day = random.randint(1, 31)
-    month = random.randint(1, 12)
-    year = 2026
-    return f"{day:02d}.{month:02d}.{year};{hours:02d}:{minutes:02d}:{seconds:02d}"
+    
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d};{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
 def user_dict_generation():
     global user_id
     dic_json = {
-        "user_id": user_id,
+        "user_id": int(user_id),
         "email": f"{fake.email()}",
         "first_name": f"{fake.first_name()}",
         "last_name": f"{fake.last_name()}",
         "middle_name": f"{fake.middle_name()}",
         "phone_number": f"{fake.phone_number()}",
         "educational_institution": f"{random.choice(institution_array)}",
-        "course": random.randint(1, 4),
+        "course": int(random.randint(1, 4)),
         "created_at": f"{created_at()}",
     }
 
@@ -76,11 +92,11 @@ university_subjects = [
 def ticket_dict_generation():
     global ticket_id
     dic_json = {
-        "ticket_id": ticket_id,
+        "ticket_id": int(ticket_id),
         "subject": f"{random.choice(university_subjects)}",
         "max_points": 50,
-        "question_count": random.randint(4, 5),
-        "diffuclty": random.randint(1, 10),
+        "question_count": int(random.randint(4, 5)),
+        "diffuclty": int(random.randint(1, 10)),
     }
     ticket_id += 1
     return dic_json
@@ -99,14 +115,14 @@ def json_dict_generation():
         "user": user,
         "ticket": ticket,
         "attempt": {
-            "attemptId": f"{random.randint(1, 20)}",
-            "userId": user["user_id"],
-            "ticketId": ticket["ticket_id"],
-            "attemptNumber": random.randint(1, 100),
-            "scoreEarned": random.randint(1, 50),
-            "maxScore": 50,
+            "attemptId": int(random.randint(1, 20)),
+            "userId": int(user["user_id"]),
+            "ticketId": int(ticket["ticket_id"]),
+            "attemptNumber": int(random.randint(1, 100)),
+            "scoreEarned": int(random.randint(1, 50)),
+            "maxScore": int(50),
             "attemptDate": attempt_date(),
-            "sessionId": session_id,
+            "sessionId": int(session_id),
         },
     }
     session_id += 1
