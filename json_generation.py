@@ -96,7 +96,7 @@ def ticket_dict_generation():
         "subject": f"{random.choice(university_subjects)}",
         "max_points": 50,
         "question_count": int(random.randint(4, 5)),
-        "diffuclty": int(random.randint(1, 10)),
+        "difficulty": int(random.randint(1, 10)),
     }
     ticket_id += 1
     return dic_json
