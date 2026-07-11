@@ -49,7 +49,7 @@ def attempt_date(start_year=2012):
     minutes = random.randint(0, 59)
     seconds = random.randint(0, 59)
     
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d};{hours:02d}:{minutes:02d}:{seconds:02d}"
+    return f"{day:02d}.{month:02d}.{year};{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
 def user_dict_generation():

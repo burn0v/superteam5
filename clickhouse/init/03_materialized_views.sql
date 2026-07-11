@@ -25,7 +25,7 @@ SELECT
     JSONExtract(raw, 'ticket', 'subject', 'String')          AS subject,
     JSONExtract(raw, 'ticket', 'max_points', 'UInt16')       AS max_points,
     JSONExtract(raw, 'ticket', 'question_count', 'UInt8')    AS question_count,
-    JSONExtract(raw, 'ticket', 'diffuclty', 'UInt8')         AS difficulty  -- ключ в JSON с опечаткой, поле в таблице названо правильно
+    JSONExtract(raw, 'ticket', 'difficulty', 'UInt8')         AS difficulty
 FROM kafka_raw;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_attempts TO attempts AS
@@ -37,8 +37,7 @@ SELECT
     JSONExtract(raw, 'attempt', 'attemptNumber', 'UInt16')   AS attempt_number,
     JSONExtract(raw, 'attempt', 'scoreEarned', 'UInt16')     AS score_earned,
     JSONExtract(raw, 'attempt', 'maxScore', 'UInt16')        AS max_score,
-    parseDateTime(
-        JSONExtract(raw, 'attempt', 'attemptDate', 'String'),
-        '%d.%m.%Y;%H:%i:%s'
+    parseDateTimeBestEffortOrNull(
+        replaceAll(JSONExtract(raw, 'attempt', 'attemptDate', 'String'), ';', ' ')
     )                                                        AS attempt_date
 FROM kafka_raw;
