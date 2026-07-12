@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Админ панель - Eduanalist{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>🔐 Админ панель</h1>
+            <p class="text-muted">Добро пожаловать, {{ user.get_full_name|default:user.username }}!</p>
+        </div>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-danger">
+            Ошибка загрузки данных: {{ error }}
+        </div>
+    {% else %}
+
+    <!-- Управление системой -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">⚙️ Управление пользователями</h5>
+                    <p class="card-text">Создание, редактирование и удаление пользователей</p>
+                    <a href="/admin/auth/user/" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📋 Управление правами</h5>
+                    <p class="card-text">Назначение ролей и разрешений пользователям</p>
+                    <a href="/admin/auth/group/" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика система -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📊 Статистика системы</h5>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div style="font-size: 2rem; color: #0d6efd; font-weight: bold;">
+                                {{ stats.users_count }}
+                            </div>
+                            <small class="text-muted">Всего пользователей</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div style="font-size: 2rem; color: #28a745; font-weight: bold;">
+                                {{ stats.attempts_count }}
+                            </div>
+                            <small class="text-muted">Всего попыток</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div style="font-size: 2rem; color: #ffc107; font-weight: bold;">
+                                {{ stats.active_users_24h }}
+                            </div>
+                            <small class="text-muted">Активных (24ч)</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div style="font-size: 2rem; color: #17a2b8; font-weight: bold;">
+                                {{ stats.avg_score|floatformat:1 }}
+                            </div>
+                            <small class="text-muted">Средний балл</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📈 Активность</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>За 24 часа:</strong>
+                            {{ stats.attempts_last_24h }} попыток,
+                            {{ stats.active_users_24h }} активных пользователей
+                        </li>
+                        <li>
+                            <strong>За 7 дней:</strong>
+                            {{ stats.attempts_last_7d }} попыток,
+                            {{ stats.active_users_7d }} активных пользователей
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">🎯 Качество обучения</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>Средний балл:</strong>
+                            {{ stats.avg_score|floatformat:2 }} / 50
+                        </li>
+                        <li>
+                            <strong>Максимальный балл:</strong>
+                            {{ stats.best_score }} / 50
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Предметы -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📚 Статистика по предметам</h5>
+                    {% if stats.by_subject %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Предмет</th>
+                                    <th class="text-end">Попыток</th>
+                                    <th class="text-end">Средний балл</th>
+                                    <th class="text-end">Процент успеха</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in stats.by_subject %}
+                                <tr>
+                                    <td><strong>{{ subject.subject }}</strong></td>
+                                    <td class="text-end">{{ subject.attempts_count }}</td>
+                                    <td class="text-end">{{ subject.avg_score|floatformat:1 }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success">
+                                            {{ subject.avg_percentage|floatformat:0|add:"0"|stringformat:".0f" }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Нет данных по предметам</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

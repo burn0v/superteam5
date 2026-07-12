@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Eduanalist{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-4">Eduanalist</h1>
+        <p class="lead mb-4">Интерактивный сервис подготовки к экзаменам с аналитикой</p>
+        <a href="/dashboard/" class="btn btn-light btn-lg">Посмотреть статистику</a>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📊 Дашборд</h5>
+                    <p class="card-text">Смотрите в реальном времени:</p>
+                    <ul class="list-unstyled">
+                        <li>✓ Количество пройденных попыток</li>
+                        <li>✓ Среднюю оценку студентов</li>
+                        <li>✓ Статистику по предметам</li>
+                        <li>✓ Активность пользователей</li>
+                    </ul>
+                    <a href="/dashboard/" class="btn btn-primary mt-3">Открыть дашборд</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">🔐 Админ панель</h5>
+                    <p class="card-text">Для администраторов:</p>
+                    <ul class="list-unstyled">
+                        <li>✓ Доступ к полной статистике</li>
+                        <li>✓ Управление пользователями</li>
+                        <li>✓ Детальные отчёты</li>
+                        <li>✓ Мониторинг системы</li>
+                    </ul>
+                    <a href="/admin/" class="btn btn-success mt-3">Админ панель</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4 text-center mb-4">
+            <div class="card stat-card">
+                <div class="stat-number">99+</div>
+                <div class="stat-label">Студентов</div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <div class="card stat-card">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Попыток</div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center mb-4">
+            <div class="card stat-card">
+                <div class="stat-number">10+</div>
+                <div class="stat-label">Предметов</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

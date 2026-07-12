@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд - Eduanalist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        text-align: center;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .metric-title {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">📊 Дашборд статистики</h1>
+
+    {% if error %}
+        <div class="alert alert-danger">
+            Ошибка загрузки данных: {{ error }}
+        </div>
+    {% else %}
+
+    <!-- Основные метрики -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value">{{ stats.users_count }}</div>
+                    <div class="metric-title">Пользователей</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value">{{ stats.attempts_count }}</div>
+                    <div class="metric-title">Всего попыток</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value">{{ stats.avg_score|floatformat:1 }}</div>
+                    <div class="metric-title">Средний балл</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <div class="metric-value">{{ stats.best_score }}</div>
+                    <div class="metric-title">Максимум баллов</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Активность -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Активность пользователей</h5>
+                    <p class="mb-2">
+                        <strong>За 24 часа:</strong> {{ stats.active_users_24h }} активных,
+                        {{ stats.attempts_last_24h }} попыток
+                    </p>
+                    <p>
+                        <strong>За 7 дней:</strong> {{ stats.active_users_7d }} активных,
+                        {{ stats.attempts_last_7d }} попыток
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Последняя активность</h5>
+                    {% if stats.last_attempt_date %}
+                        <p>Последняя попытка: <strong>{{ stats.last_attempt_date }}</strong></p>
+                    {% else %}
+                        <p>Нет данных о попытках</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика по предметам -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📚 Статистика по предметам</h5>
+                    {% if stats.by_subject %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Предмет</th>
+                                <th class="text-end">Попыток</th>
+                                <th class="text-end">Средний балл</th>
+                                <th class="text-end">Процент</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in stats.by_subject %}
+                            <tr>
+                                <td>{{ subject.subject }}</td>
+                                <td class="text-end">{{ subject.attempts_count }}</td>
+                                <td class="text-end">{{ subject.avg_score|floatformat:1 }}</td>
+                                <td class="text-end">{{ subject.avg_percentage|floatformat:0|add:"0"|stringformat:".0f" }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted">Нет данных по предметам</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Последние попытки -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">⏱️ Последние 10 попыток</h5>
+                    {% if stats.latest_attempts %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID попытки</th>
+                                    <th>Пользователь</th>
+                                    <th>Предмет</th>
+                                    <th class="text-end">Балл</th>
+                                    <th class="text-end">Макс</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in stats.latest_attempts %}
+                                <tr>
+                                    <td>#{{ attempt.attempt_id }}</td>
+                                    <td>User {{ attempt.user_id }}</td>
+                                    <td>{{ attempt.subject }}</td>
+                                    <td class="text-end"><strong>{{ attempt.score_earned }}</strong></td>
+                                    <td class="text-end">{{ attempt.max_score }}</td>
+                                    <td><small>{{ attempt.attempt_date|truncatechars:20 }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Нет данных о попытках</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

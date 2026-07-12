@@ -5,8 +5,15 @@ import clickhouse_connect
 
 def get_clickhouse_client():
     # клиент ходит в clickhouse по http (хост из env или docker-compose)
-    host = os.getenv("CLICKHOUSE_HOST", "clickhouse")
+    env_host = os.getenv("CLICKHOUSE_HOST", "clickhouse")
     port = int(os.getenv("CLICKHOUSE_PORT", "8123"))
+
+    # Попробуем подключаться к нескольким хостам в порядке приоритета:
+    # 1) из окружения (обычно 'clickhouse' в docker-compose)
+    # 2) 'localhost' для локального запуска сервера (manage.py runserver)
+    hosts = [env_host]
+    if env_host != "localhost":
+        hosts.append("localhost")
 
     username = os.getenv("CLICKHOUSE_USER")
     password = os.getenv("CLICKHOUSE_PASSWORD")
@@ -23,16 +30,18 @@ def get_clickhouse_client():
         )
 
     last_exc: Exception | None = None
-    for cand in candidates:
-        try:
-            return clickhouse_connect.get_client(
-                host=host,
-                port=port,
-                username=cand["username"],
-                password=cand["password"],
-            )
-        except Exception as exc:
-            last_exc = exc
+    # Перебираем хосты и учётки, возвращаем при первом успешном подключении
+    for h in hosts:
+        for cand in candidates:
+            try:
+                return clickhouse_connect.get_client(
+                    host=h,
+                    port=port,
+                    username=cand["username"],
+                    password=cand["password"],
+                )
+            except Exception as exc:
+                last_exc = exc
 
     assert last_exc is not None
     raise last_exc
