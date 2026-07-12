@@ -1,11 +1,9 @@
-import json
-
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from analytics.clickhouse_client import (
-    fetch_student_progress,
-    insert_student_progress,
+    fetch_dashboard_stats,
+    fetch_user_attempts,
+    fetch_user_stats,
 )
 
 
@@ -13,28 +11,19 @@ def healthcheck_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"status": "ok"})
 
 
-def progress_view(request: HttpRequest) -> JsonResponse:
-    # читаем текущие строки из clickhouse
-    return JsonResponse({"rows": fetch_student_progress()})
+def analytics_stats_view(request: HttpRequest) -> JsonResponse:
+    return JsonResponse(fetch_dashboard_stats())
 
 
-@csrf_exempt
-def insert_progress_view(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        return JsonResponse({"error": "use POST"}, status=405)
-
-    try:
-        body = json.loads(request.body.decode("utf-8") or "{}")
-        student_id = int(body["student_id"])
-        score = float(body["score"])
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return JsonResponse(
-            {"error": "expected json with student_id and score"},
-            status=400,
-        )
-
-    insert_student_progress(student_id=student_id, score=score)
+def user_attempts_view(request: HttpRequest, user_id: int) -> JsonResponse:
     return JsonResponse(
-        {"status": "ok", "inserted": {"student_id": student_id, "score": score}},
-        status=201,
+        {
+            "user_id": user_id,
+            "attempts": fetch_user_attempts(user_id),
+        }
     )
+
+
+def user_stats_view(request: HttpRequest, user_id: int) -> JsonResponse:
+    # аналитика по предметам для пользователя (как на схеме пайплайна)
+    return JsonResponse(fetch_user_stats(user_id))
