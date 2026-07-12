@@ -1,0 +1,15 @@
+<yandex>
+  <users>
+    <default>
+      <password></password>
+      <profiles>
+        <default/>
+      </profiles>
+      <networks>
+        <!-- Разрешаем доступ с любой сети в dev -->
+        <ip>::/0</ip>
+        <ip>0.0.0.0/0</ip>
+      </networks>
+    </default>
+  </users>
+</yandex>

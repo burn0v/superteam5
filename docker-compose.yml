@@ -31,6 +31,10 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     container_name: clickhouse
+    environment:
+      # Для dev: включаем сетевой доступ для пользователя default
+      CLICKHOUSE_USER: "default"
+      CLICKHOUSE_PASSWORD: "clickhouse"
     ports:
       - "8123:8123"
       - "9000:9000"
@@ -52,6 +56,8 @@ services:
       - .:/app
     environment:
       CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: clickhouse
       KAFKA_HOST: kafka
     command: python manage.py runserver 0.0.0.0:8000
     networks:

@@ -2,32 +2,52 @@ import os
 
 import clickhouse_connect
 
+from analytics.serializers import (
+    DashboardStatsSerializer,
+    UserAttemptSerializer,
+    UserStatsSerializer,
+)
+
 
 def get_clickhouse_client():
     # клиент ходит в clickhouse по http (хост из env или docker-compose)
-    env_host = os.getenv("CLICKHOUSE_HOST", "clickhouse")
+    env_host = (os.getenv("CLICKHOUSE_HOST") or "").strip()
     port = int(os.getenv("CLICKHOUSE_PORT", "8123"))
 
-    # Попробуем подключаться к нескольким хостам в порядке приоритета:
-    # 1) из окружения (обычно 'clickhouse' в docker-compose)
-    # 2) 'localhost' для локального запуска сервера (manage.py runserver)
-    hosts = [env_host]
-    if env_host != "localhost":
+    # Нормализуем хост: убираем пробелы, опечатки и неоднозначные значения.
+    normalized_env_host = None
+    if env_host:
+        normalized_env_host = env_host.lower().replace(" ", "")
+        if normalized_env_host in {"localhost", "127.0.0.1", "::1"}:
+            normalized_env_host = "localhost"
+        elif normalized_env_host in {"clickhouse", "container", "docker-clickhouse"}:
+            normalized_env_host = "clickhouse"
+        elif normalized_env_host in {"lovslhost", "lovsllhost", "locolhost"}:
+            normalized_env_host = "localhost"
+
+    # Приоритетно используем явно заданный хост из окружения.
+    # Для локального запуска Django на хосте это обычно localhost.
+    # Для контейнеров web в docker-compose мы передаём clickhouse явно.
+    if normalized_env_host:
+        hosts = [normalized_env_host]
+    else:
+        hosts = ["localhost"]
+
+    if normalized_env_host == "clickhouse":
         hosts.append("localhost")
 
-    username = os.getenv("CLICKHOUSE_USER")
+    hosts = [host for host in hosts if host and host not in {""}]
+    hosts = list(dict.fromkeys(hosts))
+
+    username = os.getenv("CLICKHOUSE_USER", "default")
     password = os.getenv("CLICKHOUSE_PASSWORD")
 
-    candidates: list[dict] = []
-    if username is not None:
-        candidates.append({"username": username, "password": password or ""})
-    else:
-        candidates.extend(
-            [
-                {"username": "default", "password": ""},
-                {"username": "project_user", "password": "project_pass"},
-            ]
-        )
+    if password is None:
+        password = "clickhouse" if normalized_env_host in {None, "localhost"} else ""
+
+    candidates: list[dict] = [{"username": username, "password": password}]
+    if username != "default":
+        candidates.append({"username": "default", "password": ""})
 
     last_exc: Exception | None = None
     # Перебираем хосты и учётки, возвращаем при первом успешном подключении
@@ -122,7 +142,7 @@ def fetch_dashboard_stats() -> dict:
         """
     )
 
-    return {
+    payload = {
         "users_count": int(metrics.get("users_count") or 0),
         "tickets_count": int(metrics.get("tickets_count") or 0),
         "attempts_count": int(metrics.get("attempts_count") or 0),
@@ -137,10 +157,11 @@ def fetch_dashboard_stats() -> dict:
         "by_subject": by_subject_rows,
         "latest_attempts": latest_attempts_rows,
     }
+    return DashboardStatsSerializer().to_representation(payload)
 
 
 def fetch_user_attempts(user_id: int) -> list[dict]:
-    return _query_rows(
+    rows = _query_rows(
         """
         SELECT
             a.attempt_id,
@@ -159,6 +180,7 @@ def fetch_user_attempts(user_id: int) -> list[dict]:
         """,
         {"user_id": user_id},
     )
+    return UserAttemptSerializer().to_representation(rows)
 
 
 def fetch_user_stats(user_id: int) -> dict:
@@ -178,11 +200,4 @@ def fetch_user_stats(user_id: int) -> dict:
         {"user_id": user_id},
     )
 
-    return {
-        "user_id": user_id,
-        "subjects": [row["subject"] for row in rows],
-        "avg_scores": [row["avg_score"] for row in rows],
-        "percentages": [row["avg_percentage"] for row in rows],
-        "attempts_count": sum(row["attempts_count"] for row in rows),
-        "details": rows,
-    }
+    return UserStatsSerializer().to_representation(user_id, rows)
