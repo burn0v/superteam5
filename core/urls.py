@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path
 
 from analytics.views import (
@@ -9,7 +10,12 @@ from analytics.views import (
 )
 
 
+def root_view(request):
+    return JsonResponse({"status": "ok", "message": "Django app is running"})
+
+
 urlpatterns = [
+    path("", root_view),
     path("admin/", admin.site.urls),
     path("health/", healthcheck_view),
     path("analytics/stats/", analytics_stats_view),

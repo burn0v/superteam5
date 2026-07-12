@@ -5,7 +5,9 @@ import clickhouse_connect
 
 def get_clickhouse_client():
     # клиент ходит в clickhouse по http (хост из env или docker-compose)
-    host = os.getenv("CLICKHOUSE_HOST", "clickhouse")
+    host = os.getenv("CLICKHOUSE_HOST")
+    if not host:
+        host = "localhost"
     port = int(os.getenv("CLICKHOUSE_PORT", "8123"))
 
     username = os.getenv("CLICKHOUSE_USER")
@@ -18,6 +20,7 @@ def get_clickhouse_client():
         candidates.extend(
             [
                 {"username": "default", "password": ""},
+                {"username": "default", "password": "default"},
                 {"username": "project_user", "password": "project_pass"},
             ]
         )
@@ -80,38 +83,59 @@ def fetch_dashboard_stats() -> dict:
     )
     metrics = metrics_rows[0] if metrics_rows else {}
 
-    by_subject_rows = _query_rows(
+    dashboard_rows = _query_rows(
         """
         SELECT
             t.subject AS subject,
             count() AS attempts_count,
             round(avg(a.score_earned), 2) AS avg_score,
-            round(avg(a.score_earned / nullIf(a.max_score, 0)), 2) AS avg_percentage
-        FROM attempts AS a
-        INNER JOIN tickets AS t ON a.ticket_id = t.ticket_id
-        GROUP BY t.subject
-        ORDER BY attempts_count DESC
-        LIMIT 10
-        """
-    )
-
-    latest_attempts_rows = _query_rows(
-        """
-        SELECT
+            round(avg(a.score_earned / nullIf(a.max_score, 0)), 2) AS avg_percentage,
             a.attempt_id,
             a.user_id,
             a.ticket_id,
-            t.subject,
             a.attempt_number,
             a.score_earned,
             a.max_score,
             a.attempt_date
         FROM attempts AS a
         LEFT JOIN tickets AS t ON a.ticket_id = t.ticket_id
+        GROUP BY
+            t.subject,
+            a.attempt_id,
+            a.user_id,
+            a.ticket_id,
+            a.attempt_number,
+            a.score_earned,
+            a.max_score,
+            a.attempt_date
         ORDER BY a.attempt_date DESC
         LIMIT 10
         """
     )
+
+    by_subject_rows = []
+    latest_attempts_rows = []
+    for row in dashboard_rows:
+        by_subject_rows.append(
+            {
+                "subject": row.get("subject"),
+                "attempts_count": row.get("attempts_count"),
+                "avg_score": row.get("avg_score"),
+                "avg_percentage": row.get("avg_percentage"),
+            }
+        )
+        latest_attempts_rows.append(
+            {
+                "attempt_id": row.get("attempt_id"),
+                "user_id": row.get("user_id"),
+                "ticket_id": row.get("ticket_id"),
+                "subject": row.get("subject"),
+                "attempt_number": row.get("attempt_number"),
+                "score_earned": row.get("score_earned"),
+                "max_score": row.get("max_score"),
+                "attempt_date": row.get("attempt_date"),
+            }
+        )
 
     return {
         "users_count": int(metrics.get("users_count") or 0),
